@@ -1,0 +1,8 @@
+__pycache__/
+*.py[cod]
+.venv/
+*~
+*.sublime-workspace
+
+# Daily schedule files
+[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9].txt
