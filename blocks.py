@@ -2,9 +2,17 @@ import re
 import sys
 from datetime import datetime, timedelta
 
-W = 24
-raw = [l.strip() for l in sys.stdin if l.strip()]
+if len(sys.argv) < 2:
+    print("Usage: uv run blocks.py <2026-10-19.txt>")
+    sys.exit(1)
+
+default_width = 24
+
+with open(sys.argv[1]) as f:
+    raw = [l.strip() for l in f if l.strip()]
 starts = [i for i, l in enumerate(raw) if l.startswith("start ")]
+if not starts:
+    sys.exit("no 'start HH:MM' line found")
 lines = raw[starts[-1] :]
 t0 = datetime.strptime(lines[0].split()[1], "%H:%M")
 
@@ -31,17 +39,19 @@ for crossed, slots, label in tasks:
     y0, y1 = s * 2, (s + slots) * 2
     ticks.update([y0, y1])
     fill = "/" if crossed else " "
-    grid[(y0, col)] = grid[(y1, col)] = f"+{'-' * W}+"
+    grid[(y0, col)] = grid[(y1, col)] = f"+{'-' * default_width}+"
     for y in range(y0 + 1, y1):
         text = f" {label} " if y == (y0 + y1) // 2 else ""
-        grid[(y, col)] = f"|{text:{fill}^{W}.{W}}|"
+        grid[(y, col)] = f"|{text:{fill}^{default_width}.{default_width}}|"
 
 if grid:
     max_y = max(y for y, _ in grid)
     max_col = max(c for _, c in grid)
-    blank = " " * (W + 2)
+    blank = " " * (default_width + 2)
+    print()
     for y in range(max_y + 1):
         t = t0 + timedelta(minutes=(y // 2) * 15)
         prefix = f"{t:%H:%M} " if y in ticks else "      "
         row = " ".join(grid.get((y, c), blank) for c in range(max_col + 1))
         print((prefix + row).rstrip())
+    print()

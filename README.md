@@ -31,7 +31,7 @@ x 45 Deep: eval review
 Render to terminal:
 
 ```bash
-python blocks.py < 2026-10-15.txt
+python blocks.py <2026-10-15.txt>
 ```
 
 Append the rendered schedule directly into your active file in Vim:
