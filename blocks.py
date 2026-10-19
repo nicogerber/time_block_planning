@@ -1,5 +1,6 @@
 import re
 import sys
+import textwrap
 from datetime import datetime, timedelta
 
 if len(sys.argv) < 2:
@@ -10,17 +11,17 @@ default_width = 24
 
 with open(sys.argv[1]) as f:
     raw = [l.strip() for l in f if l.strip()]
-starts = [i for i, l in enumerate(raw) if l.startswith("start ")]
-if not starts:
-    sys.exit("no 'start HH:MM' line found")
-lines = raw[starts[-1] :]
-t0 = datetime.strptime(lines[0].split()[1], "%H:%M")
+    starts = [i for i, l in enumerate(raw) if l.startswith("start ")]
+    if not starts:
+        sys.exit("no 'start HH:MM' line found")
+    lines = raw[starts[-1] :]
+    t0 = datetime.strptime(lines[0].split()[1], "%H:%M")
 
 tasks = []
 for l in lines[1:]:
     m = re.match(r"^(x\s+)?(\d+)\s+(.+)$", l)
     if m:
-        slots = max(1, int(m.group(2)) // 15)
+        slots = max(1, (int(m.group(2)) // 15))
         tasks.append((bool(m.group(1)), slots, m.group(3)))
 
 grid, ticks = {}, set()
@@ -39,10 +40,16 @@ for crossed, slots, label in tasks:
     y0, y1 = s * 2, (s + slots) * 2
     ticks.update([y0, y1])
     fill = "/" if crossed else " "
+    w = default_width
     grid[(y0, col)] = grid[(y1, col)] = f"+{'-' * default_width}+"
-    for y in range(y0 + 1, y1):
-        text = f" {label} " if y == (y0 + y1) // 2 else ""
-        grid[(y, col)] = f"|{text:{fill}^{default_width}.{default_width}}|"
+
+    rows = y1 - y0 - 1
+    wrapped = textwrap.wrap(label, w - 2, max_lines=rows, placeholder=" ...")
+    offset = (rows - len(wrapped)) // 2
+    for i in range(rows):
+        k = i - offset
+        text = f" {wrapped[k]} " if 0 <= k < len(wrapped) else ""
+        grid[(y0 + 1 + i, col)] = f"|{text:{fill}^{w}.{w}}|"
 
 if grid:
     max_y = max(y for y, _ in grid)
